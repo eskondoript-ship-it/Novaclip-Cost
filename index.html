@@ -1,0 +1,1083 @@
+<title>NovaClip Profit Simulator</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: an instrument panel — money coming in on one side, money going out on
+   the other, readouts to the right. Green is income, red is cost, everywhere. */
+:root{
+  --bg:#f6f7fb; --panel:#ffffff; --sunk:#eef1f7;
+  --ink:#141a2b; --soft:#5b6478; --faint:#8b93a7;
+  --line:#dde2ec; --line-2:#c7cedc;
+  --cyan:#0e8aa8; --violet:#7c3aed;
+  --in:#0f7a4a; --in-bg:#e6f5ed; --in-line:#bfe3d0;
+  --out:#b3122e; --out-bg:#fdeaee; --out-line:#f3c9d2;
+  --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#080b14; --panel:#111726; --sunk:#0c111d;
+  --ink:#e9edf7; --soft:#9aa5bd; --faint:#6b768f;
+  --line:#222b3f; --line-2:#333e57;
+  --cyan:#3ad0ec; --violet:#a78bfa;
+  --in:#4ade80; --in-bg:#102419; --in-line:#1d4231;
+  --out:#fb7185; --out-bg:#2a1018; --out-line:#4a1f2b;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#080b14; --panel:#111726; --sunk:#0c111d;
+  --ink:#e9edf7; --soft:#9aa5bd; --faint:#6b768f;
+  --line:#222b3f; --line-2:#333e57;
+  --cyan:#3ad0ec; --violet:#a78bfa;
+  --in:#4ade80; --in-bg:#102419; --in-line:#1d4231;
+  --out:#fb7185; --out-bg:#2a1018; --out-line:#4a1f2b;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+  font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:28px 56px}
+h1{font-size:clamp(1.6rem,4vw,2.2rem);font-weight:700;letter-spacing:-.025em;margin:0;text-wrap:balance}
+.lede{color:var(--soft);margin:.4rem 0 0;max-width:62ch}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+.key{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:.8rem;color:var(--soft)}
+.key b{font-weight:600}
+.key .sw{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px;margin-top:18px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.tile .k{font-size:.7rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--faint)}
+.tile .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:1.85rem;
+  font-weight:600;letter-spacing:-.02em;margin-top:6px;line-height:1.15}
+.tile .s{font-size:.8rem;color:var(--soft);margin-top:4px}
+.v.pos{color:var(--in)} .v.neg{color:var(--out)}
+
+.cols{display:grid;grid-template-columns:340px 1fr;gap:16px;margin-top:16px;align-items:start}
+@media (max-width:880px){.cols{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;min-width:0}
+.panel h2{font-size:.72rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--faint);margin:0 0 14px}
+
+/* colour-coded control groups */
+.grp{border-radius:10px;padding:14px;margin-bottom:14px}
+.grp:last-child{margin-bottom:0}
+.grp > h3{font-size:.72rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin:0 0 12px}
+.grp.income{background:var(--in-bg);border:1px solid var(--in-line)}
+.grp.income > h3{color:var(--in)}
+.grp.cost{background:var(--out-bg);border:1px solid var(--out-line)}
+.grp.cost > h3{color:var(--out)}
+.grp.plain{background:var(--sunk);border:1px solid var(--line)}
+.grp.plain > h3{color:var(--soft)}
+
+.ctl{margin-bottom:14px}
+.ctl:last-child{margin-bottom:0}
+.ctl .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:5px}
+.ctl label{font-size:.82rem;color:var(--ink);font-weight:500;min-width:0}
+.ctl output{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:.85rem;
+  font-weight:600;white-space:nowrap;color:var(--ink)}
+.income output{color:var(--in)} .cost output{color:var(--out)} .plain output{color:var(--cyan)}
+input[type=range]{width:100%;height:22px;margin:0;accent-color:var(--violet)}
+.income input[type=range]{accent-color:var(--in)}
+.cost input[type=range]{accent-color:var(--out)}
+.hint{font-size:.72rem;color:var(--faint);margin-top:3px}
+.pc{font-family:var(--mono);font-size:.74rem;color:var(--faint);min-width:42px;text-align:right}
+.subtot{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+  margin-top:12px;padding-top:10px;border-top:1px solid var(--out-line);
+  font-size:.82rem;font-weight:700;color:var(--out)}
+.subtot .n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.presets button{font:inherit;font-size:.73rem;font-weight:600;cursor:pointer;padding:5px 10px;
+  border-radius:99px;background:var(--panel);color:var(--soft);border:1px solid var(--out-line)}
+.presets button:hover{color:var(--ink)}
+.presets button[aria-pressed="true"]{background:var(--out);border-color:var(--out);color:#fff}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+
+.scroll{overflow-x:auto;margin:0 -4px}
+table{border-collapse:collapse;width:100%;min-width:660px;font-size:.86rem}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{font-size:.67rem;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);
+  font-weight:600;border-bottom-color:var(--line-2)}
+thead th.hin{color:var(--in)} thead th.hout{color:var(--out)}
+tbody td{font-family:var(--mono);font-variant-numeric:tabular-nums}
+tbody td.in{color:var(--in)} tbody td.out{color:var(--out)}
+tbody tr.target td{background:var(--sunk);font-weight:600}
+td.p{font-weight:700}
+td.p.pos{color:var(--in)} td.p.neg{color:var(--out)}
+tbody tr:last-child td{border-bottom:none}
+
+canvas{width:100%;display:block;border-radius:8px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.75rem;color:var(--soft);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+.odds{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:12px}
+.odd{background:var(--sunk);border-radius:9px;padding:11px 13px}
+.odd .k{font-size:.67rem;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);font-weight:600}
+.odd .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:1.05rem;font-weight:600;margin-top:3px}
+.verdict{margin-top:14px;padding:12px 14px;border-radius:9px;font-size:.9rem;font-weight:500;line-height:1.45}
+.verdict.good{background:var(--in-bg);color:var(--in)}
+.verdict.bad{background:var(--out-bg);color:var(--out)}
+.rangegrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:520px){.rangegrid{grid-template-columns:1fr}}
+
+.notes{margin-top:18px}
+.notes label{display:block;font-size:.72rem;font-weight:600;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--faint);margin-bottom:7px}
+textarea{width:100%;min-height:120px;resize:vertical;font:inherit;font-size:.88rem;
+  line-height:1.55;color:var(--ink);background:var(--sunk);border:1px solid var(--line);
+  border-radius:9px;padding:11px 13px}
+textarea::placeholder{color:var(--faint)}
+.saved{font-size:.72rem;color:var(--faint);margin-top:6px}
+
+.spec{width:100%;border-collapse:collapse;font-size:.84rem;min-width:0;table-layout:fixed}
+.spec td{padding:5px 0;border-bottom:1px solid var(--line);
+  overflow-wrap:anywhere;white-space:normal}
+.spec td:last-child{text-align:right;font-family:var(--mono);
+  font-variant-numeric:tabular-nums;width:38%}
+.spec tr:last-child td{border-bottom:none;font-weight:700}
+.warnbox{margin-top:14px;padding:12px 14px;border-radius:9px;font-size:.9rem;
+  font-weight:500;line-height:1.45;background:var(--out-bg);color:var(--out)}
+.okbox{margin-top:14px;padding:12px 14px;border-radius:9px;font-size:.9rem;
+  font-weight:500;line-height:1.45;background:var(--in-bg);color:var(--in)}
+.jobs{width:100%;border-collapse:collapse;font-size:.8rem;min-width:360px}
+.jobs th{font-size:.64rem;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);
+  font-weight:600;text-align:right;padding:4px 6px;border-bottom:1px solid var(--out-line)}
+.jobs th:first-child{text-align:left}
+.jobs td{padding:5px 6px;border-bottom:1px solid var(--out-line);text-align:right}
+.jobs td:first-child{text-align:left}
+.jobs tr:last-child td{border-bottom:none}
+.jobs input{width:58px;font:inherit;font-family:var(--mono);font-size:.78rem;text-align:right;
+  padding:3px 5px;border-radius:5px;border:1px solid var(--out-line);
+  background:var(--panel);color:var(--ink)}
+.jobs select{font:inherit;font-size:.72rem;padding:3px 4px;border-radius:5px;
+  border:1px solid var(--out-line);background:var(--panel);color:var(--ink)}
+.jobs td:last-child{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--out)}
+.mdl{display:block;font-size:.68rem;color:var(--faint);font-style:italic}
+td.no{color:var(--out);font-weight:700}
+td.yes{color:var(--in);font-weight:700}
+.note{font-size:.76rem;color:var(--faint);margin-top:14px;line-height:1.55}
+.note strong{color:var(--soft)}
+</style>
+
+<div class="wrap">
+  <h1>NovaClip Profit Simulator</h1>
+  <p class="lede">Drag anything and every number recalculates. Money coming in is green, money
+    going out is red.</p>
+  <div class="key">
+    <span><i class="sw" style="background:var(--in)"></i><b>Green</b> — money coming in</span>
+    <span><i class="sw" style="background:var(--out)"></i><b>Red</b> — money going out</span>
+  </div>
+
+  <div class="tiles">
+    <div class="tile">
+      <div class="k">Profit a year at <span id="tTargetA" class="num">500</span> customers</div>
+      <div class="v" id="tProfit">—</div>
+      <div class="s" id="tProfitSub">—</div>
+    </div>
+    <div class="tile">
+      <div class="k">Customers to break even</div>
+      <div class="v" id="tBreak">—</div>
+      <div class="s" id="tBreakSub">—</div>
+    </div>
+    <div class="tile">
+      <div class="k">Chance of making a profit</div>
+      <div class="v" id="tOdds">—</div>
+      <div class="s">once you have that many customers</div>
+    </div>
+  </div>
+
+  <div class="cols">
+    <!-- ------------- controls ------------- -->
+    <div class="panel">
+      <h2>The numbers you can change</h2>
+
+      <div class="grp income">
+        <h3>Money coming in</h3>
+        <div class="ctl">
+          <div class="row"><label for="price">Price a month</label><output id="oPrice"></output></div>
+          <input type="range" id="price" min="2.99" max="14.99" step="0.05" value="6.84">
+          <div class="hint">Blend of Pro €6.99, yearly €4.99, Family €9.99.</div>
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="free">Free months for a new customer</label><output id="oFree"></output></div>
+          <input type="range" id="free" min="0" max="4" step="1" value="2">
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="cert">Certificates a year, per free user and customer</label><output id="oCert"></output></div>
+          <input type="range" id="cert" min="0" max="0.08" step="0.0025" value="0.02">
+          <div class="hint">Nobody has bought any yet. The biggest unknown on the page.</div>
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="certp">Average certificate price</label><output id="oCertp"></output></div>
+          <input type="range" id="certp" min="24.99" max="99.99" step="1" value="39.99">
+        </div>
+      </div>
+
+      <div class="grp plain">
+        <h3>Who pays</h3>
+        <div class="ctl">
+          <div class="row"><label for="conv">Out of 100 free users, how many become customers</label><output id="oConv"></output></div>
+          <input type="range" id="conv" min="0.005" max="0.08" step="0.0025" value="0.025">
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="churn">Free users who leave each year</label><output id="oChurn"></output></div>
+          <input type="range" id="churn" min="0.1" max="0.7" step="0.01" value="0.40">
+        </div>
+      </div>
+
+      <div class="grp cost">
+        <h3>Money going out</h3>
+        <div class="presets" id="aiPresets">
+          <button type="button" data-ai="2.30">Pay Google €2.30</button>
+          <button type="button" data-ai="0.41">Rent a card €0.41</button>
+          <button type="button" data-ai="0.38">Buy a 3090 €0.38</button>
+          <button type="button" id="ownBtn">Your own machine</button>
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="ai">AI a year, per free user and customer</label><output id="oAi"></output></div>
+          <input type="range" id="ai" min="0" max="3" step="0.01" value="0.41">
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="salary">Salary you actually take</label><output id="oSalary"></output></div>
+          <input type="range" id="salary" min="0" max="45000" step="500" value="0">
+          <div class="hint">The business still owes you €37,486. This is what you draw.</div>
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="ads">Ads a year</label><output id="oAds"></output></div>
+          <input type="range" id="ads" min="0" max="40000" step="500" value="6000">
+        </div>
+      </div>
+
+      <div class="grp cost">
+        <h3>Everything else, item by item</h3>
+        <div class="ctl">
+          <div class="row"><label for="acct">Accountant</label>
+            <span><output id="oAcct"></output> <span class="pc" id="pAcct"></span></span></div>
+          <input type="range" id="acct" min="0" max="6000" step="50" value="1800">
+          <div class="hint">€150 a month, required from the day the company exists.</div>
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="insur">Insurance and filings</label>
+            <span><output id="oInsur"></output> <span class="pc" id="pInsur"></span></span></div>
+          <input type="range" id="insur" min="0" max="6000" step="50" value="1200">
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="tools">Tools and domains</label>
+            <span><output id="oTools"></output> <span class="pc" id="pTools"></span></span></div>
+          <input type="range" id="tools" min="0" max="6000" step="20" value="1080">
+          <div class="hint">Domains, email, the editor, fonts, design tools.</div>
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="host">Hosting</label>
+            <span><output id="oHost"></output> <span class="pc" id="pHost"></span></span></div>
+          <input type="range" id="host" min="0" max="3000" step="20" value="240">
+          <div class="hint">Static files. There is no server to rent.</div>
+        </div>
+        <div class="ctl">
+          <div class="row"><label for="bank">Stripe and bank charges</label>
+            <span><output id="oBank"></output> <span class="pc" id="pBank"></span></span></div>
+          <input type="range" id="bank" min="0" max="6000" step="20" value="280">
+        </div>
+        <div class="subtot"><span>Everything else, a year</span><span class="n" id="otherTot">—</span></div>
+      </div>
+    </div>
+
+    <!-- ------------- readouts ------------- -->
+    <div style="display:grid;gap:16px;min-width:0">
+
+      <div class="panel">
+        <h2>Profit at each size</h2>
+        <div class="ctl plain" style="margin-bottom:16px">
+          <div class="row"><label for="target">Customers you are aiming at</label><output id="oTarget" style="color:var(--cyan)"></output></div>
+          <input type="range" id="target" min="50" max="5000" step="50" value="500">
+        </div>
+        <div class="scroll">
+          <table>
+            <thead><tr>
+              <th>Customers</th><th>Free users</th>
+              <th class="hin">Subscriptions</th><th class="hin">Certificates</th>
+              <th class="hout">AI</th><th class="hout">Salary, ads and the rest</th>
+              <th>Profit a year</th>
+            </tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <p class="note">Each row is a whole year at that size. Green columns are money coming in,
+          red columns are money going out. “Salary, ads and the rest” is every fixed cost added
+          together with the 12% spare on top, which is why it does not change as you grow — only
+          the AI bill does.</p>
+      </div>
+
+      <div class="panel">
+        <h2>Where every euro goes at <span id="splitAt" class="num">500</span> customers</h2>
+        <div class="scroll">
+          <table style="min-width:420px">
+            <thead><tr><th>Line</th><th>A year</th><th>Share</th><th>A month</th></tr></thead>
+            <tbody id="splitBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>If you buy the machine</h2>
+        <p class="note" style="margin-top:0">Your build. Prices move every month, so these are
+          estimates — type over any of them. Press “Your own machine” in the red group to make the
+          whole page use owned hardware instead of a price per user.</p>
+
+        <div class="scroll" style="margin-bottom:10px">
+          <table class="jobs" style="min-width:340px">
+            <thead><tr><th>Part</th><th>Price</th><th>Flat out</th></tr></thead>
+            <tbody>
+              <tr><td>RTX 5090, 32GB <span class="mdl">does the generating</span></td>
+                <td><input type="number" id="pt1" value="2600" min="0" step="50"></td><td>575 W</td></tr>
+              <tr><td>RTX PRO 4500, 32GB <span class="mdl">second card, holds the text models</span></td>
+                <td><input type="number" id="pt2" value="2900" min="0" step="50"></td><td>200 W</td></tr>
+              <tr><td>Ryzen 9 9950X <span class="mdl">16 cores, 24 PCIe lanes</span></td>
+                <td><input type="number" id="pt3" value="600" min="0" step="25"></td><td>170 W</td></tr>
+              <tr><td>128GB DDR5 <span class="mdl">4 × 32GB, 6000</span></td>
+                <td><input type="number" id="pt4" value="480" min="0" step="20"></td><td>20 W</td></tr>
+              <tr><td>4TB NVMe <span class="mdl">models are 20–40GB each</span></td>
+                <td><input type="number" id="pt5" value="300" min="0" step="20"></td><td>10 W</td></tr>
+              <tr><td>Board, X870E <span class="mdl">the only part that decides how many cards fit</span></td>
+                <td><input type="number" id="pt6" value="350" min="0" step="25"></td><td>30 W</td></tr>
+              <tr><td>1600W power supply <span class="mdl">80+ Platinum, two 12V-2x6 plus 8-pins</span></td>
+                <td><input type="number" id="pt7" value="300" min="0" step="25"></td><td>—</td></tr>
+              <tr><td>Cooling <span class="mdl">360mm on the CPU, six case fans</span></td>
+                <td><input type="number" id="pt8" value="180" min="0" step="20"></td><td>15 W</td></tr>
+              <tr><td>Case <span class="mdl">has to swallow a 31cm, 3-slot card</span></td>
+                <td><input type="number" id="pt9" value="150" min="0" step="20"></td><td>—</td></tr>
+              <tr><td>Cables, Linux, the bits <span class="mdl">it is never zero</span></td>
+                <td><input type="number" id="pt10" value="120" min="0" step="10"></td><td>—</td></tr>
+              <tr><td>One machine</td><td id="specTot">—</td><td id="specW">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="hint" style="margin-bottom:14px">Two cards is the ceiling, and the board is not
+          why. The 9950X has 24 PCIe lanes, so two slots run at x8/x8 and there is nothing left for
+          a third. A third card means Threadripper PRO or EPYC — a different, much dearer machine.</div>
+
+        <div class="grp cost" style="margin-bottom:14px">
+          <div class="subtot" style="border-top:none;padding-top:0">
+            <span>What one machine costs, from the parts above</span><span class="n" id="oMcost">—</span></div>
+          <div class="ctl">
+            <div class="row"><label for="mwatt">Average draw while it runs</label><output id="oMwatt"></output></div>
+            <input type="range" id="mwatt" min="100" max="1100" step="25" value="400">
+            <div class="hint">Flat out the parts above add up to <span class="num" id="peakW">—</span>,
+              which is what sizes the power supply. It is not flat out all day, so the average is
+              what the meter actually reads.</div>
+          </div>
+          <div class="ctl">
+            <div class="row"><label for="kwh">Electricity price</label><output id="oKwh"></output></div>
+            <input type="range" id="kwh" min="0.08" max="0.45" step="0.01" value="0.22">
+          </div>
+          <div class="ctl">
+            <div class="row"><label for="mlife">How many years it lasts</label><output id="oMlife"></output></div>
+            <input type="range" id="mlife" min="1" max="6" step="1" value="3">
+          </div>
+          <div class="ctl">
+            <label style="font-size:.82rem;font-weight:500">
+              <input type="checkbox" id="route" checked style="accent-color:var(--out);
+                vertical-align:-2px;margin-right:6px">
+              Send each job to the model that suits it
+            </label>
+            <div class="hint">Off, everything goes to one middling model. On, a tiny model takes
+              the easy work — your document already says the cheap model is eight times less per
+              question.</div>
+          </div>
+          <div class="scroll">
+            <table class="jobs" style="min-width:470px">
+              <thead><tr><th>Job</th><th>A year</th><th>Speed</th><th>Who gets it</th><th>GPU a year</th></tr></thead>
+              <tbody>
+                <tr><td>Editor suggestions <span class="mdl">tiny model, per second</span></td>
+                  <td><input type="number" id="j1n" value="300" min="0" step="10"></td>
+                  <td><input type="number" id="j1s" value="20" min="0" step="0.5"></td>
+                  <td><select id="j1a"><option value="all">Everyone</option><option value="cust">Customers</option><option value="off">Not here</option></select></td>
+                  <td id="j1t">—</td></tr>
+                <tr><td>Ask Nova — LLM assistant <span class="mdl">small model, per second</span></td>
+                  <td><input type="number" id="j2n" value="220" min="0" step="10"></td>
+                  <td><input type="number" id="j2s" value="6" min="0" step="0.5"></td>
+                  <td><select id="j2a"><option value="all">Everyone</option><option value="cust">Customers</option><option value="off">Not here</option></select></td>
+                  <td id="j2t">—</td></tr>
+                <tr><td>Scripts and captions <span class="mdl">small model, per second</span></td>
+                  <td><input type="number" id="j3n" value="45" min="0" step="5"></td>
+                  <td><input type="number" id="j3s" value="6" min="0" step="0.5"></td>
+                  <td><select id="j3a"><option value="all">Everyone</option><option value="cust">Customers</option><option value="off">Not here</option></select></td>
+                  <td id="j3t">—</td></tr>
+                <tr><td>Trend scans <span class="mdl">needs live web search</span></td>
+                  <td><input type="number" id="j4n" value="60" min="0" step="5"></td>
+                  <td><input type="number" id="j4s" value="2" min="0" step="0.5"></td>
+                  <td><select id="j4a"><option value="off" selected>Not here</option><option value="all">Everyone</option><option value="cust">Customers</option></select></td>
+                  <td id="j4t">—</td></tr>
+                <tr><td>Image generation <span class="mdl">seconds each</span></td>
+                  <td><input type="number" id="j5n" value="22" min="0" step="1"></td>
+                  <td><input type="number" id="j5s" value="2.5" min="0" step="0.5"></td>
+                  <td><select id="j5a"><option value="all">Everyone</option><option value="cust">Customers</option><option value="off">Not here</option></select></td>
+                  <td id="j5t">—</td></tr>
+                <tr><td>Video generation <span class="mdl">seconds each — 5s of video</span></td>
+                  <td><input type="number" id="j6n" value="6" min="0" step="1"></td>
+                  <td><input type="number" id="j6s" value="120" min="0" step="10"></td>
+                  <td><select id="j6a"><option value="cust" selected>Customers</option><option value="all">Everyone</option><option value="off">Not here</option></select></td>
+                  <td id="j6t">—</td></tr>
+                <tr><td>Character animation <span class="mdl">seconds each</span></td>
+                  <td><input type="number" id="j7n" value="4" min="0" step="1"></td>
+                  <td><input type="number" id="j7s" value="90" min="0" step="10"></td>
+                  <td><select id="j7a"><option value="cust" selected>Customers</option><option value="all">Everyone</option><option value="off">Not here</option></select></td>
+                  <td id="j7t">—</td></tr>
+                <tr><td>Body tracking <span class="mdl">runs in their browser</span></td>
+                  <td><input type="number" id="j8n" value="200" min="0" step="10"></td>
+                  <td><input type="number" id="j8s" value="0.3" min="0" step="0.1"></td>
+                  <td><select id="j8a"><option value="off" selected>Their device</option><option value="all">Everyone</option><option value="cust">Customers</option></select></td>
+                  <td id="j8t">—</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="hint" style="margin-top:6px"><strong>“Who gets it” is the whole game.</strong>
+            Everyone means every free user as well, and the free crowd is forty times the paying
+            one. Not here means it never touches your machine — trend scans need live web search,
+            and body tracking runs on the phone in front of the person, which is where it belongs.</div>
+          <div class="ctl" style="margin-top:12px">
+            <div class="row"><label for="flat">If you used one model for everything</label><output id="oFlat"></output></div>
+            <input type="range" id="flat" min="0.5" max="20" step="0.5" value="3">
+          </div>
+          <div class="ctl">
+            <div class="row"><label for="peak">Busiest hour against the average</label><output id="oPeak"></output></div>
+            <input type="range" id="peak" min="1" max="20" step="1" value="8">
+            <div class="hint">THE number that decides everything here. Everyone is on it after
+              school, so the machine has to be built for 6pm, not for 4am.</div>
+          </div>
+          <div class="subtot" style="border-top:none;padding-top:4px">
+            <span>What one machine carries</span><span class="n" id="oPermc">—</span></div>
+          <div class="hint" id="whyCap" style="margin-top:4px">—</div>
+          <div class="ctl">
+            <div class="row"><label for="budget">All the money you have for hardware</label><output id="oBudget"></output></div>
+            <input type="range" id="budget" min="0" max="60000" step="1000" value="18000">
+          </div>
+          <div class="subtot"><span>Electricity a year, one machine</span><span class="n" id="elecYr">—</span></div>
+          <div class="subtot" style="border-top:none;padding-top:0"><span>All in, one machine, a year</span><span class="n" id="mcYr">—</span></div>
+        </div>
+
+        <div class="scroll">
+          <table style="min-width:520px">
+            <thead><tr>
+              <th>Customers</th><th>Free users</th><th>Machines</th>
+              <th class="hout">To buy them</th><th class="hout">Running a year</th>
+              <th>Can you afford it</th>
+            </tr></thead>
+            <tbody id="hwBody"></tbody>
+          </table>
+        </div>
+        <h2 style="margin-top:24px">Estimated cost, all in, at <span id="totAt" class="num">500</span> customers</h2>
+        <div class="scroll">
+          <table class="spec">
+            <tr><td>Machines to buy — one off</td><td id="totBuy">—</td></tr>
+            <tr><td>Electricity a year</td><td id="totElec">—</td></tr>
+            <tr><td>The machines spread over their life, a year</td><td id="totDep">—</td></tr>
+            <tr><td>Salary you draw, ads, accountant and the rest, a year</td><td id="totBiz">—</td></tr>
+            <tr><td>Everything it costs in a year</td><td id="totYear">—</td></tr>
+          </table>
+        </div>
+        <div class="scroll" style="margin-top:10px">
+          <table class="spec">
+            <tr><td>Money coming in, a year</td><td id="totIn">—</td></tr>
+            <tr><td>Profit a year, on owned machines</td><td id="totProfit">—</td></tr>
+            <tr><td>Cash you need before you start</td><td id="totCash">—</td></tr>
+          </table>
+        </div>
+
+        <div id="hwVerdict" class="warnbox">—</div>
+
+        <h2 style="margin-top:26px">Can one beast replace all of them</h2>
+        <p class="note" style="margin-top:0">
+          <strong>No, and it is worth knowing why.</strong> Fourteen machines is twenty-eight
+          cards. The 9950X is a consumer chip with 24 PCIe lanes, so it takes two cards and that
+          is the end of it. To go past that you need Threadripper PRO or EPYC and 128 lanes, which
+          tops out around four to eight cards in one box — not twenty-eight. One real beast would
+          be four RTX 6000 Blackwell at roughly €8,000 each, so <strong>€40,000 of cards before
+          anything else</strong>, and it still would not do the work of fourteen.<br><br>
+          <strong>The wall is electricity, not money.</strong> Fourteen of your machines average
+          <span class="num" id="beastKw">5.6</span> kW, around the clock. A Portuguese home supply
+          is usually 3.45 to 6.9 kW <em>in total</em>. You would be running the whole house at its
+          limit, forever, for <span class="num" id="beastElec">€10,800</span> of electricity a
+          year. A single beast of four big cards plus its CPU pulls 2 to 3 kW on its own and needs
+          two power supplies, proper wiring and somewhere that is not a bedroom.<br><br>
+          <strong>So you do not build the beast. You need fewer free users per customer, or
+          fewer requests each.</strong> These three cost nothing in hardware:
+        </p>
+        <table class="spec" style="margin-top:10px">
+          <tr><td>Send each job to the model that suits it</td><td id="fixRoute">—</td></tr>
+          <tr><td>Keep video and animation for customers only</td><td id="fixHeavy">—</td></tr>
+          <tr><td>Double conversion, 2.5 → 5 in 100</td><td id="fixConv">—</td></tr>
+          <tr><td>Halve what each free user asks for</td><td id="fixReq">—</td></tr>
+          <tr><td>Flatten the evening rush by half</td><td id="fixPeak">—</td></tr>
+        </table>
+        <div class="okbox" id="hybridBox">—</div>
+      </div>
+
+      <div class="panel">
+        <h2>How likely is it, really</h2>
+        <p class="note" style="margin-top:0">Conversion, certificates and churn are guesses, not
+          measurements. Give each one a worst and a best, and the page draws three thousand
+          futures between them.</p>
+
+        <div class="rangegrid">
+          <div class="ctl"><div class="row"><label for="convLo">Conversion, worst</label><output id="oConvLo"></output></div>
+            <input type="range" id="convLo" min="0.002" max="0.05" step="0.001" value="0.012"></div>
+          <div class="ctl"><div class="row"><label for="convHi">Conversion, best</label><output id="oConvHi"></output></div>
+            <input type="range" id="convHi" min="0.01" max="0.12" step="0.0025" value="0.05"></div>
+          <div class="ctl"><div class="row"><label for="certLo">Certificates, worst</label><output id="oCertLo"></output></div>
+            <input type="range" id="certLo" min="0" max="0.04" step="0.0025" value="0.005"></div>
+          <div class="ctl"><div class="row"><label for="certHi">Certificates, best</label><output id="oCertHi"></output></div>
+            <input type="range" id="certHi" min="0.005" max="0.12" step="0.0025" value="0.045"></div>
+          <div class="ctl"><div class="row"><label for="churnLo">Leaving, best case</label><output id="oChurnLo"></output></div>
+            <input type="range" id="churnLo" min="0.1" max="0.5" step="0.01" value="0.28"></div>
+          <div class="ctl"><div class="row"><label for="churnHi">Leaving, worst case</label><output id="oChurnHi"></output></div>
+            <input type="range" id="churnHi" min="0.3" max="0.85" step="0.01" value="0.58"></div>
+        </div>
+
+        <div class="odds">
+          <div class="odd"><div class="k">Bad run (10%)</div><div class="v" id="p10">—</div></div>
+          <div class="odd"><div class="k">Middle</div><div class="v" id="p50">—</div></div>
+          <div class="odd"><div class="k">Good run (10%)</div><div class="v" id="p90">—</div></div>
+        </div>
+
+        <div style="margin-top:14px"><canvas id="hist" height="170"></canvas></div>
+        <div class="legend">
+          <span><i style="background:var(--out)"></i>Futures that lose money</span>
+          <span><i style="background:var(--in)"></i>Futures that make money</span>
+        </div>
+
+        <div class="verdict" id="verdict">—</div>
+
+        <div class="notes">
+          <label for="notes">Your notes on the possibilities</label>
+          <textarea id="notes" placeholder="Write here — what you think is realistic, what your mentor asked, which number you plan to measure first. Saved in this browser."></textarea>
+          <div class="saved" id="savedMsg">Saved in this browser only. It does not travel with the link.</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>What this is built on</h2>
+        <p class="note" style="margin-top:0">
+          <strong>Free users and customers are not the same thing.</strong> A free user has signed
+          up and pays nothing. A customer pays. Out of every 100 free users only a couple ever
+          become customers — but the AI bill arrives for all of them, which is why the free crowd
+          is the cost and the customers are the income.<br><br>
+          <strong>Facts:</strong> plan prices from NovaClip's own pricing page (€6.99 / €4.99 /
+          €9.99, certificates €24.99–€99.99), Stripe at 2.2% + €0.25, AI at €2.30 a year for every
+          free user and customer from the costs document, and the three-way AI comparison in it.<br><br>
+          <strong>Guesses:</strong> conversion, churn and the certificate rate. None has been
+          measured, because the payment links are not live yet. They are also the three numbers
+          that move this page most — which is the argument for measuring them before spending
+          €20,000 on ads.<br><br>
+          <strong>What the odds do and do not say:</strong> they are the chance of making a profit
+          <em>once you already have</em> that many customers. They are not the chance of getting
+          there. Reaching 500 is the harder half, and that is what the ad budget is for.<br><br>
+          <strong>How profit is worked out:</strong> you only bill
+          <span class="num" id="fBilled">11.2</span> months a year, because each year you replace
+          whoever left and every replacement gets the free months. Certificates carry no AI cost,
+          so almost all of that money is profit. Everything else carries the 12% spare from the
+          costs document.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+  var eur = function(n){
+    return (n < 0 ? '−€' : '€') + Math.abs(Math.round(n)).toLocaleString('en-GB');
+  };
+  var eur2 = function(n){ return '€' + n.toFixed(2); };
+  var num = function(n){ return Math.round(n).toLocaleString('en-GB'); };
+  var pct = function(n){ return (n * 100).toFixed(1) + '%'; };
+
+  var ids = ['price','free','cert','certp','conv','churn','ai','salary','ads','target',
+             'acct','insur','tools','host','bank',
+             'mwatt','kwh','mlife','budget',
+             'pt1','pt2','pt3','pt4','pt5','pt6','pt7','pt8','pt9','pt10',
+             'j1n','j1s','j2n','j2s','j3n','j3s','j4n','j4s','j5n','j5s',
+             'j6n','j6s','j7n','j7s','j8n','j8s','flat','peak',
+             'convLo','convHi','certLo','certHi','churnLo','churnHi'];
+  var V = {}, own = false;
+
+  // The build. Prices are yours to type over; the watts are what each part is
+  // rated at flat out, which is what the power supply has to cover.
+  var PARTS = [
+    { id:'pt1', w:575 }, { id:'pt2', w:200 }, { id:'pt3', w:170 },
+    { id:'pt4', w:20 },  { id:'pt5', w:10 },  { id:'pt6', w:30 },
+    { id:'pt7', w:0 },   { id:'pt8', w:15 },  { id:'pt9', w:0 },
+    { id:'pt10', w:0 }
+  ];
+
+  function read(){
+    ids.forEach(function(k){ V[k] = parseFloat($(k).value) || 0; });
+    V.other = V.acct + V.insur + V.tools + V.host + V.bank;
+
+    // The machine costs whatever the parts cost. Nothing else sets this.
+    V.mcost = 0; V.peakW = 0;
+    PARTS.forEach(function(pt){ V.mcost += V[pt.id]; V.peakW += pt.w; });
+
+    // One machine, all in for a year: the hardware spread over its life, plus
+    // what the meter reads.
+    V.elecYr = V.mwatt / 1000 * 24 * 365 * V.kwh;
+    V.mcYr   = V.mcost / V.mlife + V.elecYr;
+
+    // How many free users one machine carries. A year has 31.5M seconds, but a
+    // machine built for the average falls over at 6pm — so the usable seconds
+    // are the year divided by how much busier the busy hour is.
+    V.usable = 31536000 / Math.max(1, V.peak);
+    V.routing = $('route').checked;
+
+    // GPU seconds a year behind ONE paying customer: their own jobs, plus the
+    // free users it took to produce them. Everything scales off this, so
+    // capacity is just this coefficient inverted.
+    var coeff = 0;
+    JOBS.forEach(function(j){
+      var aud = jobAud(j), s = V[j.k + 'n'] * jobSecs(j);
+      if (aud === 'all') coeff += s * (1 / V.conv + 1);
+      else if (aud === 'cust') coeff += s;
+    });
+    V.custPerMc = coeff > 0 ? V.usable / coeff : Infinity;
+    V.permc = V.custPerMc * (1 / V.conv + 1);
+  }
+
+  // Every job: how many a year, how long one takes, and who it is for. The text
+  // jobs are quoted per second, the heavy ones in seconds each.
+  var JOBS = [
+    { k:'j1', rate:true,  name:'Editor suggestions' },
+    { k:'j2', rate:true,  name:'Ask Nova (LLM assistant)' },
+    { k:'j3', rate:true,  name:'Scripts and captions' },
+    { k:'j4', rate:true,  name:'Trend scans' },
+    { k:'j5', rate:false, name:'Image generation' },
+    { k:'j6', rate:false, name:'Video generation' },
+    { k:'j7', rate:false, name:'Character animation' },
+    { k:'j8', rate:false, name:'Body tracking' }
+  ];
+  function jobSecs(j){
+    var s = V[j.k + 's'];
+    if (!j.rate) return s;                              // seconds each
+    if (!V.routing) return 1 / Math.max(0.1, V.flat);   // one model for all text
+    return s > 0 ? 1 / s : 0;
+  }
+  function jobAud(j){ return $(j.k + 'a').value; }
+
+  // GPU seconds a year for a given number of customers. The free crowd is what
+  // makes a feature expensive, so who a feature is for matters more than how
+  // fast the card is.
+  function gpuSeconds(customers){
+    var everyone = customers / V.conv + customers, total = 0, per = {};
+    JOBS.forEach(function(j){
+      var aud = jobAud(j);
+      var heads = aud === 'all' ? everyone : aud === 'cust' ? customers : 0;
+      var s = heads * V[j.k + 'n'] * jobSecs(j);
+      per[j.k] = s;
+      total += s;
+    });
+    return { total: total, per: per, everyone: everyone };
+  }
+  function machines(customers){
+    return Math.max(1, Math.ceil(gpuSeconds(customers).total / V.usable));
+  }
+
+  function billed(churn, free){ return 12 - churn * free; }
+  function certKept(p){ return p * 0.978 - 0.25; }
+  function fixed(){ return (V.salary + V.ads + V.other) * 1.12; }
+
+  function profitAt(customers, o){
+    o = o || {};
+    var conv  = o.conv  !== undefined ? o.conv  : V.conv;
+    var cert  = o.cert  !== undefined ? o.cert  : V.cert;
+    var churn = o.churn !== undefined ? o.churn : V.churn;
+    // A free user has signed up and pays nothing; a customer pays. The AI bill
+    // lands on both, so it is charged on the two added together.
+    var freeUsers = customers / conv;
+    var everyone  = freeUsers + customers;
+    var subs  = customers * V.price * billed(churn, V.free);
+    var certs = everyone * cert * certKept(V.certp);
+    // Renting is a price per person. Owning is not — you buy a whole machine
+    // whether it is full or empty, so the bill goes up in steps.
+    var mc    = own ? machines(customers) : 0;
+    var ai    = own ? mc * V.mcYr : everyone * V.ai;
+    var fx    = fixed();
+    return { freeUsers:freeUsers, everyone:everyone, machines:mc, subs:subs,
+             certs:certs, ai:ai, fixed:fx, profit: subs + certs - ai - fx };
+  }
+
+  // Scanned rather than solved, because owning makes the cost a staircase and
+  // there is no single formula that fits both ways of paying.
+  function breakEven(){
+    if (profitAt(20000).profit <= 0) return null;
+    var lo = 1, hi = 20000;
+    while (lo < hi){
+      var mid = Math.floor((lo + hi) / 2);
+      if (profitAt(mid).profit >= 0) hi = mid; else lo = mid + 1;
+    }
+    return lo;
+  }
+
+  function tri(lo, mode, hi){
+    if (hi <= lo) return mode;
+    mode = Math.min(Math.max(mode, lo), hi);
+    var u = Math.random(), c = (mode - lo) / (hi - lo);
+    return u < c ? lo + Math.sqrt(u * (hi - lo) * (mode - lo))
+                 : hi - Math.sqrt((1 - u) * (hi - lo) * (hi - mode));
+  }
+
+  var TRIALS = 3000;
+  function simulate(customers){
+    var out = new Float64Array(TRIALS), wins = 0;
+    for (var i = 0; i < TRIALS; i++){
+      var p = profitAt(customers, {
+        conv:  tri(V.convLo,  V.conv,  V.convHi),
+        cert:  tri(V.certLo,  V.cert,  V.certHi),
+        churn: tri(V.churnLo, V.churn, V.churnHi)
+      }).profit;
+      out[i] = p;
+      if (p > 0) wins++;
+    }
+    out.sort();
+    return { all: out, win: wins / TRIALS,
+             p10: out[Math.floor(TRIALS * 0.10)],
+             p50: out[Math.floor(TRIALS * 0.50)],
+             p90: out[Math.floor(TRIALS * 0.90)] };
+  }
+
+  function css(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+  function drawHist(sim){
+    var cv = $('hist'), dpr = window.devicePixelRatio || 1;
+    var w = cv.clientWidth, h = parseInt(cv.getAttribute('height'), 10);
+    cv.width = Math.max(1, Math.round(w * dpr)); cv.height = Math.round(h * dpr);
+    cv.style.height = h + 'px';
+    var g = cv.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+
+    var padL = 10, padR = 10, padT = 10, padB = 26;
+    var x0 = padL, x1 = w - padR, y0 = padT, y1 = h - padB;
+    var all = sim.all, lo = all[0], hi = all[all.length - 1];
+    if (hi === lo) hi = lo + 1;
+    var BINS = 44, bins = new Array(BINS).fill(0);
+    for (var i = 0; i < all.length; i++){
+      bins[Math.min(BINS - 1, Math.floor((all[i] - lo) / (hi - lo) * BINS))]++;
+    }
+    var peak = Math.max.apply(null, bins) || 1, bw = (x1 - x0) / BINS;
+    for (var k = 0; k < BINS; k++){
+      var v = lo + (hi - lo) * ((k + 0.5) / BINS);
+      var bh = bins[k] / peak * (y1 - y0);
+      g.fillStyle = v >= 0 ? css('--in') : css('--out');
+      g.globalAlpha = .85;
+      g.fillRect(x0 + k * bw, y1 - bh, Math.max(1, bw - 1), bh);
+    }
+    g.globalAlpha = 1;
+    g.font = '11px ' + css('--mono'); g.textBaseline = 'middle';
+    g.fillStyle = css('--faint');
+    g.textAlign = 'left';  g.fillText(eur(lo), x0, y1 + 13);
+    g.textAlign = 'right'; g.fillText(eur(hi), x1, y1 + 13);
+    if (lo < 0 && hi > 0){
+      var zx = x0 + (0 - lo) / (hi - lo) * (x1 - x0);
+      g.strokeStyle = css('--line-2'); g.lineWidth = 1.5; g.setLineDash([4,4]);
+      g.beginPath(); g.moveTo(zx, y0); g.lineTo(zx, y1); g.stroke(); g.setLineDash([]);
+      g.fillStyle = css('--soft'); g.textAlign = 'center'; g.fillText('€0', zx, y0 + 6);
+    }
+  }
+
+  var SIZES = [100, 250, 500, 1000, 2500, 5000], simTimer = null;
+
+  function render(){
+    read();
+    if (V.convHi <= V.convLo)   { V.convHi = V.convLo + 0.005;  $('convHi').value = V.convHi; }
+    if (V.certHi <= V.certLo)   { V.certHi = V.certLo + 0.005;  $('certHi').value = V.certHi; }
+    if (V.churnHi <= V.churnLo) { V.churnHi = V.churnLo + 0.02; $('churnHi').value = V.churnHi; }
+
+    $('oPrice').textContent  = eur2(V.price) + ' /mo';
+    $('oFree').textContent   = V.free + (V.free === 1 ? ' month' : ' months');
+    $('oCert').textContent   = (V.cert * 100).toFixed(2) + ' in 100';
+    $('oCertp').textContent  = eur2(V.certp);
+    $('oConv').textContent   = (V.conv * 100).toFixed(2) + ' in 100';
+    $('oChurn').textContent  = Math.round(V.churn * 100) + ' in 100';
+    $('oAi').textContent     = eur2(V.ai);
+    $('oSalary').textContent = eur(V.salary);
+    $('oAds').textContent    = eur(V.ads);
+    $('oTarget').textContent = num(V.target) + ' customers';
+    $('oConvLo').textContent = (V.convLo * 100).toFixed(1) + ' in 100';
+    $('oConvHi').textContent = (V.convHi * 100).toFixed(1) + ' in 100';
+    $('oCertLo').textContent = (V.certLo * 100).toFixed(1) + ' in 100';
+    $('oCertHi').textContent = (V.certHi * 100).toFixed(1) + ' in 100';
+    $('oChurnLo').textContent = Math.round(V.churnLo * 100) + ' in 100';
+    $('oChurnHi').textContent = Math.round(V.churnHi * 100) + ' in 100';
+    $('fBilled').textContent = billed(V.churn, V.free).toFixed(1);
+
+    // everything-else items, each as a share of that group
+    [['acct','Acct'],['insur','Insur'],['tools','Tools'],['host','Host'],['bank','Bank']]
+      .forEach(function(p){
+        $('o' + p[1]).textContent = eur(V[p[0]]);
+        $('p' + p[1]).textContent = V.other > 0 ? pct(V[p[0]] / V.other) : '—';
+      });
+    $('otherTot').textContent = eur(V.other);
+
+    Array.prototype.forEach.call($('aiPresets').children, function(b){
+      b.setAttribute('aria-pressed', b.id === 'ownBtn'
+        ? own : (!own && Math.abs(parseFloat(b.dataset.ai) - V.ai) < 0.005));
+    });
+
+    // ---- the machine ----
+    $('specTot').textContent = eur(V.mcost);
+    $('specW').textContent   = num(V.peakW) + ' W';
+    $('peakW').textContent   = num(V.peakW) + ' W';
+    $('oMcost').textContent  = eur(V.mcost);
+    $('oMwatt').textContent  = Math.round(V.mwatt) + ' W';
+    $('oKwh').textContent    = '€' + V.kwh.toFixed(2) + ' /kWh';
+    $('oMlife').textContent  = V.mlife + (V.mlife === 1 ? ' year' : ' years');
+    $('oFlat').textContent   = V.flat.toFixed(1) + ' a second';
+    $('oPeak').textContent   = Math.round(V.peak) + '× busier';
+
+    var gs = gpuSeconds(V.target), hog = null, hogS = 0;
+    JOBS.forEach(function(j){
+      var s = gs.per[j.k], cell = $(j.k + 't');
+      if (jobAud(j) === 'off'){ cell.textContent = '—'; }
+      else {
+        cell.textContent = s >= 3600 ? Math.round(s / 3600).toLocaleString('en-GB') + ' h'
+                                     : Math.round(s).toLocaleString('en-GB') + ' s';
+        if (s > hogS){ hogS = s; hog = j.name; }
+      }
+    });
+    $('oPermc').textContent = isFinite(V.permc)
+      ? num(V.permc) + ' free · ' + num(V.custPerMc) + ' paying'
+      : '—';
+    $('whyCap').textContent = hog
+      ? ('At ' + num(V.target) + ' customers that is ' + Math.round(gs.total / 3600).toLocaleString('en-GB')
+         + ' GPU hours a year, and ' + hog.toLowerCase() + ' takes '
+         + Math.round(hogS / gs.total * 100) + '% of it. One machine gives you '
+         + Math.round(V.usable / 3600).toLocaleString('en-GB') + ' usable hours, so your target '
+         + 'needs ' + num(machines(V.target))
+         + (machines(V.target) === 1 ? ' machine.' : ' machines.'))
+      : 'Nothing is running on your machine.';
+    $('oBudget').textContent = eur(V.budget);
+    $('elecYr').textContent  = eur(V.elecYr);
+    $('mcYr').textContent    = eur(V.mcYr);
+
+    var hw = '';
+    SIZES.forEach(function(n){
+      var mc = machines(n);
+      var buy = mc * V.mcost, fits = buy <= V.budget;
+      hw += '<tr' + (Math.abs(n - V.target) < 25 ? ' class="target"' : '') + '>'
+        + '<td>' + num(n) + '</td>'
+        + '<td>' + num(n / V.conv) + '</td>'
+        + '<td>' + num(mc) + '</td>'
+        + '<td class="out">' + eur(-buy) + '</td>'
+        + '<td class="out">' + eur(-mc * V.mcYr) + '</td>'
+        + '<td class="' + (fits ? 'yes' : 'no') + '">' + (fits ? 'yes' : 'no') + '</td>'
+        + '</tr>';
+    });
+    $('hwBody').innerHTML = hw;
+
+    // What 5,000 customers would really take, and the cheap ways out of it
+    var bigM = machines(5000);
+    $('beastKw').textContent = (bigM * V.mwatt / 1000).toFixed(1);
+    $('beastElec').textContent = eur(bigM * V.elecYr);
+
+    function machinesIf(opt){
+      var conv = opt.conv || V.conv, reqMult = opt.req || 1;
+      var peakMult = opt.peak || 1, routed = opt.routed === undefined ? V.routing : opt.routed;
+      var everyone = 5000 / conv + 5000, total = 0;
+      JOBS.forEach(function(j){
+        var aud = opt.heavyToCust && (j.k === 'j6' || j.k === 'j7') ? 'cust' : jobAud(j);
+        var heads = aud === 'all' ? everyone : aud === 'cust' ? 5000 : 0;
+        var s = j.rate ? (routed ? (V[j.k + 's'] > 0 ? 1 / V[j.k + 's'] : 0)
+                                 : 1 / Math.max(0.1, V.flat))
+                       : V[j.k + 's'];
+        total += heads * V[j.k + 'n'] * reqMult * s;
+      });
+      return Math.max(1, Math.ceil(total / (31536000 / Math.max(1, V.peak * peakMult))));
+    }
+    $('fixRoute').textContent = machinesIf({ routed:false }) + ' machines → '
+      + machinesIf({ routed:true });
+    $('fixConv').textContent = bigM + ' machines → ' + machinesIf({ conv: V.conv * 2 });
+    $('fixReq').textContent  = bigM + ' machines → ' + machinesIf({ req: 0.5 });
+    $('fixPeak').textContent = bigM + ' machines → ' + machinesIf({ peak: 0.5 });
+    $('fixHeavy').textContent = bigM + ' machines → ' + machinesIf({ heavyToCust: true });
+    var allThree = machinesIf({ conv: V.conv * 2, req: 0.5, peak: 0.5,
+                                routed: true, heavyToCust: true });
+    $('hybridBox').textContent = 'All of them together takes 5,000 customers from ' + bigM
+      + ' machines to ' + allThree + '. And the honest architecture is not one beast anyway — '
+      + 'own one or two for the quiet hours, rent by the hour for the evening rush. You pay for '
+      + 'the peak only while it is happening, and nothing up front.';
+
+    // Estimated cost, all in, at the target — on owned machines
+    var tM = machines(V.target);
+    var tBuy = tM * V.mcost, tElec = tM * V.elecYr, tDep = tM * V.mcost / V.mlife;
+    var tBiz = fixed();
+    var tYear = tElec + tDep + tBiz;
+    var tR = profitAt(V.target), tIn = tR.subs + tR.certs;
+    $('totAt').textContent     = num(V.target);
+    $('totBuy').textContent    = eur(tBuy);
+    $('totElec').textContent   = eur(tElec);
+    $('totDep').textContent    = eur(tDep);
+    $('totBiz').textContent    = eur(tBiz);
+    $('totYear').textContent   = eur(tYear);
+    $('totIn').textContent     = eur(tIn);
+    $('totProfit').textContent = eur(tIn - tYear);
+    $('totCash').textContent   = eur(tBuy + Math.max(0, tYear - tIn));
+
+    var maxMachines = V.mcost > 0 ? Math.floor(V.budget / V.mcost) : 0;
+    var maxCustomers = maxMachines * V.custPerMc;
+    var maxPeople = maxCustomers * (1 / V.conv + 1);
+    var hv = $('hwVerdict');
+    if (!isFinite(maxCustomers)){
+      hv.className = 'okbox';
+      hv.textContent = 'Nothing is set to run on your machine, so there is no limit to hit. '
+        + 'Give at least one job an audience above.';
+    } else if (maxMachines < 1){
+      hv.className = 'warnbox';
+      hv.textContent = eur(V.budget) + ' does not buy one machine at ' + eur(V.mcost) + '. '
+        + 'Rent by the hour instead — it costs nothing up front.';
+    } else {
+      hv.className = maxCustomers >= 5000 ? 'okbox' : 'warnbox';
+      hv.textContent = eur(V.budget) + ' buys ' + num(maxMachines)
+        + (maxMachines === 1 ? ' machine' : ' machines') + '. That serves about '
+        + num(maxPeople) + ' people, which caps you at roughly ' + num(maxCustomers)
+        + ' customers. Past that you cannot buy your way out — you rent, or you raise more.';
+    }
+
+    var r = profitAt(V.target);
+    $('tTargetA').textContent = num(V.target);
+    $('splitAt').textContent = num(V.target);
+    var pf = $('tProfit');
+    pf.textContent = eur(r.profit);
+    pf.className = 'v ' + (r.profit >= 0 ? 'pos' : 'neg');
+    $('tProfitSub').textContent = num(r.freeUsers) + ' free users, '
+      + eur(r.profit / 12) + ' a month';
+
+    var be = breakEven();
+    $('tBreak').textContent = be === null ? 'never' : num(be);
+    $('tBreak').className = 'v ' + (be === null ? 'neg' : '');
+    $('tBreakSub').textContent = be === null
+      ? 'AI costs more than a customer brings'
+      : num(be / V.conv) + ' free users';
+
+    var rows = '';
+    SIZES.forEach(function(n){
+      var x = profitAt(n), isT = Math.abs(n - V.target) < 25;
+      rows += '<tr' + (isT ? ' class="target"' : '') + '>'
+        + '<td>' + num(n) + '</td>'
+        + '<td>' + num(x.freeUsers) + '</td>'
+        + '<td class="in">' + eur(x.subs) + '</td>'
+        + '<td class="in">' + eur(x.certs) + '</td>'
+        + '<td class="out">' + eur(-x.ai) + '</td>'
+        + '<td class="out">' + eur(-x.fixed) + '</td>'
+        + '<td class="p ' + (x.profit >= 0 ? 'pos' : 'neg') + '">' + eur(x.profit) + '</td>'
+        + '</tr>';
+    });
+    $('tbody').innerHTML = rows;
+
+    // where every euro goes, at the target
+    var inTot = r.subs + r.certs;
+    var sp = [
+      ['Subscriptions', r.subs, 'in'],
+      ['Certificates', r.certs, 'in'],
+      ['Money coming in', inTot, 'tot-in'],
+      ['AI', -r.ai, 'out'],
+      ['Salary you take', -V.salary * 1.12, 'out'],
+      ['Ads', -V.ads * 1.12, 'out'],
+      ['Accountant', -V.acct * 1.12, 'out'],
+      ['Insurance and filings', -V.insur * 1.12, 'out'],
+      ['Tools and domains', -V.tools * 1.12, 'out'],
+      ['Hosting', -V.host * 1.12, 'out'],
+      ['Stripe and bank charges', -V.bank * 1.12, 'out'],
+      ['Money going out', -(r.ai + r.fixed), 'tot-out'],
+      ['Profit a year', r.profit, 'profit']
+    ];
+    var outTot = r.ai + r.fixed;
+    var srows = '';
+    sp.forEach(function(row){
+      var name = row[0], val = row[1], kind = row[2];
+      var base = (kind === 'in' || kind === 'tot-in') ? inTot : outTot;
+      var share = (kind === 'profit') ? (inTot > 0 ? r.profit / inTot : 0)
+                                      : (base > 0 ? Math.abs(val) / base : 0);
+      var cls = kind === 'in' || kind === 'tot-in' ? 'in'
+              : kind === 'out' || kind === 'tot-out' ? 'out'
+              : (r.profit >= 0 ? 'in' : 'out');
+      var strong = kind.indexOf('tot') === 0 || kind === 'profit';
+      srows += '<tr' + (strong ? ' class="target"' : '') + '>'
+        + '<td>' + name + '</td>'
+        + '<td class="' + cls + '">' + eur(val) + '</td>'
+        + '<td class="' + cls + '">' + pct(share) + '</td>'
+        + '<td class="' + cls + '">' + eur(val / 12) + '</td>'
+        + '</tr>';
+    });
+    $('splitBody').innerHTML = srows;
+
+    clearTimeout(simTimer);
+    simTimer = setTimeout(function(){
+      var sim = simulate(V.target);
+      $('tOdds').textContent = Math.round(sim.win * 100) + '%';
+      $('tOdds').className = 'v ' + (sim.win >= 0.5 ? 'pos' : 'neg');
+      $('p10').textContent = eur(sim.p10);
+      $('p50').textContent = eur(sim.p50);
+      $('p90').textContent = eur(sim.p90);
+      var v = $('verdict');
+      if (sim.win >= 0.6){
+        v.className = 'verdict good';
+        v.textContent = 'Most futures make money at ' + num(V.target)
+          + ' customers. Even a bad run lands at ' + eur(sim.p10) + '.';
+      } else if (sim.win >= 0.25){
+        v.className = 'verdict bad';
+        v.textContent = 'A coin toss. ' + Math.round(sim.win * 100)
+          + ' futures in 100 make money at ' + num(V.target)
+          + ' customers. Measure conversion before betting on it.';
+      } else {
+        v.className = 'verdict bad';
+        v.textContent = 'Only ' + Math.round(sim.win * 100)
+          + ' futures in 100 make money here. Change something structural — the AI bill, '
+          + 'the salary you draw, or the ad budget.';
+      }
+      drawHist(sim);
+    }, 60);
+  }
+
+  ids.forEach(function(k){ $(k).addEventListener('input', render); });
+  $('route').addEventListener('change', render);
+  ['j1a','j2a','j3a','j4a','j5a','j6a','j7a','j8a'].forEach(function(k){
+    $(k).addEventListener('change', render);
+  });
+  Array.prototype.forEach.call($('aiPresets').children, function(b){
+    b.addEventListener('click', function(){
+      if (b.id === 'ownBtn'){ own = true; }
+      else { own = false; $('ai').value = b.dataset.ai; }
+      render();
+    });
+  });
+  $('ai').addEventListener('input', function(){ own = false; });
+
+  // notes — kept in this browser only, and the page works fine without them
+  var KEY = 'novaclip-sim-notes', ta = $('notes'), saveTimer = null;
+  try { var prev = localStorage.getItem(KEY); if (prev) ta.value = prev; } catch (e) {}
+  ta.addEventListener('input', function(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function(){
+      try {
+        localStorage.setItem(KEY, ta.value);
+        $('savedMsg').textContent = 'Saved in this browser only. It does not travel with the link.';
+      } catch (e) {
+        $('savedMsg').textContent = 'This browser will not let the page save notes, so copy them '
+          + 'out before you close the tab.';
+      }
+    }, 400);
+  });
+
+  window.addEventListener('resize', function(){ clearTimeout(simTimer); render(); });
+  if (window.matchMedia){
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    if (mq.addEventListener) mq.addEventListener('change', render);
+  }
+  render();
+})();
+</script>
