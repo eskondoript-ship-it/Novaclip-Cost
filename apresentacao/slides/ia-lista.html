@@ -1,0 +1,20 @@
+<section id="ia-lista" data-transition="fade" style="background:#ffffff;color:#16202b;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<p style="font-size:26px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#a8762a">A camada de IA</p>
+<h2 style="font-family:'Source Serif 4', Georgia, serif;font-size:76px;font-weight:600;line-height:1.1;width:1450px">Que modelo, para quê, e quanto custa cada pedido</h2>
+<p style="font-size:30px;line-height:1.5;color:#5a6675;width:1600px">Os valores abaixo não são estimativas comerciais. Saem dos limites de tokens escritos no próprio código do site e dos preços publicados da API da Google. Qualquer professor de TIC pode confirmar as duas coisas.</p>
+<table style="font-family:'IBM Plex Sans', Arial, sans-serif;font-size:28px;color:#16202b">
+<tr><th style="width:34%;font-size:24px;color:#5a6675;text-align:left">Pedido</th><th style="width:22%;font-size:24px;color:#5a6675">Limite de resposta</th><th style="width:22%;font-size:24px;color:#5a6675">Custo hoje</th><th style="width:22%;font-size:24px;color:#5a6675">Desde Jan 2027</th></tr>
+<tr><td style="text-align:left">Perguntar à Nova</td><td>1 200 tokens</td><td>€0,0045</td><td>€0,0090</td></tr>
+<tr><td style="text-align:left">Ideias de vídeo</td><td>1 800 tokens</td><td>€0,0066</td><td>€0,0132</td></tr>
+<tr><td style="text-align:left">Guião com tempos</td><td>1 500 tokens</td><td>€0,0056</td><td>€0,0112</td></tr>
+<tr><td style="text-align:left">Análise de tendências</td><td>4 chamadas</td><td>€0,0365</td><td>€0,0601</td></tr>
+<tr><td style="text-align:left">Miniatura (imagem)</td><td>1 imagem</td><td>€0,0359</td><td>€0,0359</td></tr>
+<tr><td style="text-align:left">Clipper IA (vídeo de 1 h)</td><td>4 000 tokens</td><td>€0,0146</td><td>€0,0293</td></tr>
+</table>
+<div style="display:flex;gap:32px">
+<p style="flex:1;font-size:28px;line-height:1.5;color:#16202b;background:#fdf4ec;padding:30px 34px;border-left:4px solid #a8762a;border-radius:0 6px 6px 0"><b>O preço duplica a 1 de Janeiro de 2027.</b> O modelo em uso está num preço introdutório que termina nessa data. Está na proposta porque é um facto com data, não uma possibilidade.</p>
+<p style="flex:1;font-size:28px;line-height:1.5;color:#16202b;background:#eef4f8;padding:30px 34px;border-left:4px solid #11456c;border-radius:0 6px 6px 0"><b>A chave nunca chega ao browser.</b> Todos os pedidos passam por um Cloudflare Worker que guarda a chave num segredo de ambiente. Nenhum ficheiro do site contém credenciais.</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;font-size:24px;color:#8793a2">Fonte: limites de tokens no código do NovaClip e tabela de preços da Gemini Developer API</p>
+<aside>Se houver um professor de informática na sala, este é o slide onde ele decide se somos sérios. Explicar porque é que a análise de tendências custa oito vezes uma pergunta: são quatro chamadas, uma delas com pesquisa na web, que é a parte cara. Mencionar que os resultados de pesquisa ficam em cache seis horas, por isso uma turma inteira a pesquisar o mesmo tema paga uma pesquisa só.</aside>
+</section>

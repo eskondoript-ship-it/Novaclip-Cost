@@ -1,103 +1,107 @@
-# NovaClip — cost and profit simulator
+# NovaClip — números
 
-One HTML file. Open `index.html` in any browser and every number recalculates as
-you drag. Nothing is installed, nothing is fetched, no account, no network calls
-at all — which is also why it works offline and why there is no key anywhere in
-it.
+Everything about what NovaClip costs and what it would charge, kept out of the
+site itself. Three things live here, all static, no build step, no dependencies.
 
-**[Open it](https://eskondoript-ship-it.github.io/Novaclip-Cost/)** once Pages is
-switched on (Settings → Pages → Branch `main`, folder `/root`).
+| | What it is |
+| --- | --- |
+| **[index.html](index.html)** | The profit simulator — break-even, machines, profit at each size |
+| **[restelo.html](restelo.html)** | The partnership proposal for the Agrupamento de Escolas do Restelo, in Portuguese |
+| **[apresentacao/](apresentacao/)** | The 18 slides of the school presentation, in Portuguese |
 
-## What it answers
+Switch Pages on under Settings → Pages → Branch `main`, folder `/ (root)`, and
+both simulators open at `https://eskondoript-ship-it.github.io/Novaclip-Cost/`.
 
-- How many paying customers before NovaClip breaks even
-- What the profit is at 100 / 250 / 500 / 1,000 / 2,500 / 5,000 customers
-- How many machines the AI features need, and what they cost to buy and to run
-- Which AI features are affordable to give away free, and which are not
-- How likely any of it is, across three thousand simulated futures
+---
 
-Money coming in is green, money going out is red.
+## 1. The profit simulator — `index.html`
 
-## The machine it prices
+Open it and drag anything; every number recalculates. Money coming in is green,
+money going out is red.
 
-| Part | Price | Flat out |
-| --- | --- | --- |
-| RTX 5090, 32GB | €2,600 | 575 W |
-| RTX PRO 4500, 32GB | €2,900 | 200 W |
-| Ryzen 9 9950X | €600 | 170 W |
-| 128GB DDR5, 4 × 32GB | €480 | 20 W |
-| 4TB NVMe | €300 | 10 W |
-| Motherboard, X870E | €350 | 30 W |
-| 1600W power supply, 80+ Platinum | €300 | — |
-| Cooling, 360mm AIO and six fans | €180 | 15 W |
-| Case | €150 | — |
-| Cables, Linux, the bits | €120 | — |
-| **One machine** | **€7,980** | **1,020 W** |
+It answers how many paying customers before break-even, the profit at 100 to
+5,000 customers, how many machines the AI features need and what they cost to
+buy and to run, which features are affordable to give away, and how likely any
+of it is across three thousand simulated futures.
 
-Every price is editable in the page, and the machine cost is nothing but their
-sum — so the buy price, the depreciation, the profit and the budget verdict all
-move together when a price changes.
+**The machine it prices** — RTX 5090 32GB, RTX PRO 4500 32GB, Ryzen 9 9950X,
+128GB DDR5, 4TB NVMe, X870E board, 1600W PSU, cooling, case: **€7,980** and
+1,020 W flat out. Every price is editable in the page and the machine cost is
+nothing but their sum.
 
 **Two cards is the ceiling, and the board is not why.** The 9950X has 24 PCIe
-lanes, so two slots run at x8/x8 and there is nothing left for a third. A third
-card means Threadripper PRO or EPYC — a different, much dearer machine. So
-capacity grows by buying whole machines, not by adding cards.
+lanes, so two slots run at x8/x8 and there is nothing left for a third. Capacity
+grows by buying whole machines, not by adding cards.
 
-## The finding that matters most
+**The finding that matters.** Each AI feature has an audience — Everyone,
+Customers, or Not here — and that choice matters more than how fast the card is.
+Video generation at 5,000 customers: 8 machines for customers only, **63 for
+everyone**. So video and character animation are what people pay for.
 
-Each AI feature has an audience: **Everyone**, **Customers**, or **Not here**.
-That one choice matters more than how fast the card is, because a feature given
-to everyone gets multiplied by the free crowd.
+## 2. The Restelo proposal — `restelo.html`
 
-Video generation, at 5,000 customers:
+A costing tool for one specific partnership meeting, in Portuguese, themed on
+the Agrupamento's own navy (`#072f4c`, the colour its site uses) and carrying
+its logo.
 
-| Who gets it | Machines |
-| --- | --- |
-| Customers only | 8 |
-| Everyone | **63** — €504,000 of hardware. Not possible. |
+Set the number of students, how many actually use it, the monthly plan, the AI
+tier, whether certificates and NovaCoins are included and at which level, and
+the partnership discount. It shows the first-year total, the per-student figure,
+**and what it costs us to serve them** — so the discount can be set knowingly
+rather than guessed.
 
-So video and character animation are what people pay for. Image generation at
-2.5s is cheap enough to give away, and it still ends up the single biggest use
-of the card (39%) purely because everyone gets it 22 times a year. Body tracking
-runs in the browser and costs nothing. Trend scans need live web search, which a
-card in your room cannot do, so they stay on an API.
+Default scenario, 1,300 students at 60% adoption on Family Plus with 30% off:
+the school pays **€45,798** in year one, €4.89 per active student per month,
+against **€8,137** of AI and payment fees. The page states the maximum discount
+that still covers cost (**87%**) and turns red past it.
 
-## At 500 customers
+Every base price in it is one the site already charges. Nothing was invented for
+the meeting.
 
-| | |
-| --- | --- |
-| Machines needed | 1 |
-| Machines to buy — one off | €7,980 |
-| Electricity a year | €771 |
-| Hardware spread over 3 years | €2,660 |
-| Salary, ads, accountant and the rest | €11,872 |
-| **Everything it costs in a year** | **€15,303** |
-| Money coming in a year | €54,237 |
-| **Profit a year** | **€38,934** |
+## 3. The presentation — `apresentacao/`
 
-One machine carries about 684 paying customers. The second machine is the only
-hardware decision worth planning for, and it only arrives once the business is
-already making real money.
+Eighteen slides in Portuguese for a meeting with the school's ICT teachers, with
+speaker notes on every one. `deck.json` is the index and order; `slides/` holds
+one file per slide.
 
-## What is measured and what is guessed
+Its sections: what NovaClip is and why it reaches a school now · the ten tools
+and what the AI does in each · privacy, GDPR and child protection · where the AI
+runs and what the partnership costs · the proposed pilot and the questions the
+teachers are likely to ask.
 
-Treat this as a model, not a forecast. Two inputs carry almost all of the
-uncertainty and **neither is measurable until the payment links are live**:
+The slides are in the Artifact slide format — a fixed 1920×1080 canvas with
+inline styles — so they are the deck's source, not pages that render on their
+own. The live deck is a private Claude artifact; these files are the record of
+what it says.
 
-- **conversion** — how many free users become paying ones (2.5% assumed; apps
-  like this get 1–2%, the original plan assumed 5%)
-- **certificates** — how many people buy one (2% assumed; nobody has bought one
-  yet)
+## Where the numbers come from
 
-Below roughly 3% conversion, growth makes the losses bigger rather than smaller.
-That is the single number to go and measure first.
+The hard figures are measured from NovaClip's own code and from published
+provider prices, not estimated:
 
-The costs are firmer: year-one figures come from the NovaClip costs document, and
-the hardware prices are retail at the time of writing.
+- **€3.00 per free user per year** of AI at today's rates, **€5.05 from
+  1 January 2027**, when the introductory price on the model in use ends.
+- **0.0317 GPU hours per person per year** on the current feature mix. One
+  machine gives **1,095 usable hours** a year after allowing for the 8× evening
+  peak, so one machine serves about **34,500 students** — a 1,300-student school
+  uses 3.8% of one.
+- Per-call costs come from the `maxTokens` written at each call site in the
+  site's source, priced at the Gemini Developer API's published rates.
+- Cloudflare at 500 customers is **€72 a year**; the free KV tier breaks first,
+  at 1,000 writes a day against the 42,966 the traffic needs.
 
-## Notes on the page itself
+## What is still a guess
 
-- No build step, no dependencies, no framework. One file.
-- Anything typed into the notes box is saved in that browser only. It does not
-  travel with the link and it is not uploaded anywhere.
-- Works in light and dark, and down to phone width.
+Two inputs carry nearly all the uncertainty and **neither is measurable until
+the payment links are live**: how many free users convert (2.5% assumed; apps
+like this get 1–2%) and how many buy a certificate (2% assumed; nobody has
+bought one yet). Below roughly 3% conversion, growth makes the losses bigger.
+
+Treat all of it as a model, not a forecast.
+
+## Notes
+
+- No build step, no dependencies, no network calls. Each page is one file.
+- Notes typed into a simulator are saved in that browser only.
+- The Agrupamento's logo in `apresentacao/` and in `restelo.html` is theirs,
+  used in a proposal addressed to them.

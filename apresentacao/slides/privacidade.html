@@ -1,0 +1,20 @@
+<section id="privacidade" data-section="Privacidade, RGPD e proteção de menores — as perguntas de TIC." data-transition="fade" style="background:#f7f6f3;color:#16202b;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<p style="font-size:26px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#a8762a">RGPD</p>
+<h2 style="font-family:'Source Serif 4', Georgia, serif;font-size:76px;font-weight:600;line-height:1.1;width:1500px">O que sai do dispositivo, e para onde</h2>
+<p style="font-size:29px;line-height:1.5;color:#5a6675;width:1620px">A página de privacidade do site tem esta tabela com vinte e seis linhas, uma por funcionalidade. Estas são as que interessam a uma escola. Cada linha diz o que é enviado, não só que “podemos recolher dados”.</p>
+<table style="font-family:'IBM Plex Sans', Arial, sans-serif;font-size:26px;color:#16202b">
+<tr><th style="width:30%;font-size:23px;color:#5a6675;text-align:left">Quando o aluno…</th><th style="width:34%;font-size:23px;color:#5a6675;text-align:left">O que é enviado</th><th style="width:36%;font-size:23px;color:#5a6675;text-align:left">Quem recebe</th></tr>
+<tr><td style="text-align:left">Pergunta alguma coisa à IA</td><td style="text-align:left">O texto que escreveu</td><td style="text-align:left">O nosso Worker, e daí para a API da Google</td></tr>
+<tr><td style="text-align:left">Pede análise de um clipe</td><td style="text-align:left">Quatro imagens fixas a 512px — não o vídeo, não o som, não o nome do ficheiro</td><td style="text-align:left">O mesmo Worker. Desligado por omissão</td></tr>
+<tr><td style="text-align:left">Cola um link no Clipper</td><td style="text-align:left">O link, e mais nada. O vídeo nunca é descarregado</td><td style="text-align:left">A Google vai buscar o vídeo do lado dela</td></tr>
+<tr><td style="text-align:left">Edita um vídeo</td><td style="text-align:left">Nada</td><td style="text-align:left">Ninguém. Corre no dispositivo</td></tr>
+<tr><td style="text-align:left">Usa o editor de áudio</td><td style="text-align:left">Nada</td><td style="text-align:left">Ninguém. Funciona com a rede desligada</td></tr>
+<tr><td style="text-align:left">Ganha um certificado</td><td style="text-align:left">O nome que vai no certificado, qual é e a data</td><td style="text-align:left">O nosso Worker, para o número poder ser verificado depois</td></tr>
+</table>
+<div style="display:flex;gap:32px">
+<p style="flex:1;font-size:27px;line-height:1.5;color:#16202b;background:#ffffff;padding:28px 32px;border:1px solid #d9dde3;border-radius:6px"><b>Sem palavra-passe no servidor.</b> A palavra-passe passa por 600 000 iterações de PBKDF2 no browser; o servidor recebe 32 bytes derivados e nunca a palavra-passe.</p>
+<p style="flex:1;font-size:27px;line-height:1.5;color:#16202b;background:#ffffff;padding:28px 32px;border:1px solid #d9dde3;border-radius:6px"><b>Sem rosto, nunca.</b> A verificação de idade acima dos 16 é feita por um serviço externo. O NovaClip guarda a resposta e a data — nenhuma fotografia nos chega.</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;font-size:24px;color:#8793a2">Fonte: novaclip.org/privacy.html, tabela “O que é enviado para fora, e quando”</p>
+<aside>Levar a página de privacidade aberta no portátil. Se perguntarem pelo encarregado de proteção de dados do Agrupamento, dizer que estamos disponíveis para responder a um questionário por escrito antes de qualquer piloto, e que a tabela já existe publicada — não é escrita para esta reunião. A linha do Clipper é a que costuma surpreender: a Google vai buscar o vídeo, nós nunca lhe tocamos.</aside>
+</section>
