@@ -5,32 +5,18 @@
   "title": "NovaClip no Restelo",
   "order": [
     "capa",
-    "oque",
-    "porque",
-    "ferramentas",
-    "novatools",
-    "ia-lista",
-    "tendencias",
-    "clipper",
-    "limite",
-    "privacidade",
-    "menores",
-    "infra",
-    "custo",
-    "proposta",
-    "certificados",
+    "demo",
     "avos",
+    "novatools",
+    "privacidade",
+    "proposta",
     "piloto",
-    "escola",
-    "perguntas",
     "proximo"
   ],
   "sections": {
-    "s1": { "description": "O que é o NovaClip e porque é que isto chega agora à escola.", "start": "capa" },
-    "s2": { "description": "As ferramentas, uma a uma, e o que a IA faz em cada uma.", "start": "ferramentas" },
-    "s3": { "description": "Privacidade, RGPD e proteção de menores — as perguntas de TIC.", "start": "privacidade" },
-    "s4": { "description": "Onde corre a IA, o que custa servir esta escola e a proposta.", "start": "infra" },
-    "s5": { "description": "O piloto proposto, o que é preciso da escola e as perguntas prováveis.", "start": "piloto" }
+    "s1": { "description": "Quem somos e o que vamos abrir no site.", "start": "capa" },
+    "s2": { "description": "Um projecto concreto e o que fica gratuito para a escola.", "start": "avos" },
+    "s3": { "description": "Privacidade, a proposta e o piloto que propomos.", "start": "privacidade" }
   },
   "faces": {
     "source-serif-4": {

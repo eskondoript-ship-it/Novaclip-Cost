@@ -7,7 +7,7 @@ site itself. Three things live here, all static, no build step, no dependencies.
 | --- | --- |
 | **[index.html](index.html)** | The profit simulator — break-even, machines, profit at each size |
 | **[restelo.html](restelo.html)** | The partnership proposal for the Agrupamento de Escolas do Restelo, in Portuguese |
-| **[apresentacao/](apresentacao/)** | The 18 slides of the school presentation, in Portuguese |
+| **[apresentacao/](apresentacao/)** | The school presentation, in Portuguese — 8 slides in the deck, 12 more kept as detail |
 
 Switch Pages on under Settings → Pages → Branch `main`, folder `/ (root)`, and
 both simulators open at `https://eskondoript-ship-it.github.io/Novaclip-Cost/`.
@@ -60,14 +60,22 @@ the meeting.
 
 ## 3. The presentation — `apresentacao/`
 
-Eighteen slides in Portuguese for a meeting with the school's ICT teachers, with
-speaker notes on every one. `deck.json` is the index and order; `slides/` holds
-one file per slide.
+Portuguese, for a meeting with the school's ICT teachers, with speaker notes on
+every slide. `deck.json` is the index and order; `slides/` holds one file per
+slide.
 
-Its sections: what NovaClip is and why it reaches a school now · the ten tools
-and what the AI does in each · privacy, GDPR and child protection · where the AI
-runs and what the partnership costs · the proposed pilot and the questions the
-teachers are likely to ask.
+**The deck is eight slides**, because the meeting is mostly a live demo of the
+site rather than a presentation: cover · what we're going to open · videos for
+grandparents · NovaTools free with no login · what leaves the device · the
+proposal · the pilot · the next step.
+
+`slides/` still holds **twelve more** that are not in `order` and so not in the
+deck: the ten tools and what the AI does in each, the per-call AI costs, the
+Trend Spotter and the Clipper, what NovaClip deliberately does *not* do, child
+protection, the infrastructure numbers, the base prices, certificates, what the
+school needs to provide, and the questions the teachers are likely to ask. They
+are the detail behind the eight — useful as a leave-behind and as the answers
+when a question goes deeper than the deck.
 
 The slides are in the Artifact slide format — a fixed 1920×1080 canvas with
 inline styles — so they are the deck's source, not pages that render on their
