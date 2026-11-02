@@ -7,7 +7,7 @@ site itself. Three things live here, all static, no build step, no dependencies.
 | --- | --- |
 | **[index.html](index.html)** | The profit simulator — break-even, machines, profit at each size |
 | **[restelo.html](restelo.html)** | The partnership proposal for the Agrupamento de Escolas do Restelo, in Portuguese |
-| **[apresentacao/](apresentacao/)** | The school presentation, in Portuguese — 7 slides in the deck, 12 more kept as detail |
+| **[apresentacao/](apresentacao/)** | The school presentation, in Portuguese — 7 slides in the deck, 13 more kept as detail |
 
 Switch Pages on under Settings → Pages → Branch `main`, folder `/ (root)`, and
 both simulators open at `https://eskondoript-ship-it.github.io/Novaclip-Cost/`.
@@ -69,7 +69,7 @@ site rather than a presentation: cover · what we're going to open · videos for
 grandparents · NovaTools free with no login · what leaves the device · the
 proposal · the pilot · the next step.
 
-`slides/` still holds **twelve more** that are not in `order` and so not in the
+`slides/` still holds **thirteen more** that are not in `order` and so not in the
 deck: the ten tools and what the AI does in each, the per-call AI costs, the
 Trend Spotter and the Clipper, what NovaClip deliberately does *not* do, child
 protection, the infrastructure numbers, the base prices, certificates, what the
